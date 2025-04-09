@@ -1,46 +1,44 @@
 export default async function handler(req, res) {
   const { from, to } = req.query;
 
-  const propertyIds = [
-    // Replace with your real Bentral property IDs
-    "5f5451794d6a674d",
-    "5f5451794d6a6b4d",
-    "5f5451794d7a634d"
-  ];
-
   const headers = {
     "X-API-KEY": process.env.BENTRAL_API_KEY,
     "Content-Type": "application/json"
   };
 
   try {
+    // Step 1: Retrieve the list of properties
+    const propertiesRes = await fetch(`https://api.bentral.com/v1/properties`, { headers });
+    const properties = await propertiesRes.json();
+
     let allAvailableUnits = [];
 
-    for (const propertyId of propertyIds) {
-      const unitsRes = await fetch(
-        `https://api.bentral.com/v1/properties/${propertyId}/units`,
-        { headers }
-      );
+    // Step 2: Iterate over each property to get its units
+    for (const property of properties) {
+      const propertyId = property.id;
+
+      // Retrieve units for the property
+      const unitsRes = await fetch(`https://api.bentral.com/v1/properties/${propertyId}/units`, { headers });
       const units = await unitsRes.json();
 
+      // Step 3: Check availability for each unit
       for (const unit of units) {
         const unitId = unit.id;
 
-        const detailsRes = await fetch(
+        const availabilityRes = await fetch(
           `https://api.bentral.com/v1/properties/${propertyId}/units/${unitId}?fields=availability&from=${from}&to=${to}`,
           { headers }
         );
-        const details = await detailsRes.json();
+        const availabilityData = await availabilityRes.json();
 
-        const isAvailable = details.availability?.every(
-          (day) => day.status === "avail"
-        );
+        // Determine if the unit is available for the entire date range
+        const isAvailable = availabilityData.availability?.every(day => day.status === "avail");
 
         if (isAvailable) {
           allAvailableUnits.push({
             unitId,
             propertyId,
-            name: unit.unofficialName || unit.officialName?.[0]?.title
+            name: unit.unofficial_name || unit.official_name?.[0]?.title
           });
         }
       }
