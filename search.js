@@ -5,9 +5,9 @@ export default async function handler(req, res) {
 
   const propertyIds = [
     // TODO: Replace with your real property IDs from Bentral
-    "7a6a674d",
-    "property-id-2",
-    "property-id-3"
+    "5f5451794d6a674d",
+    "5f5451794d6a6b4d",
+    "5f5451794d7a634d"
   ];
 
   const headers = {
