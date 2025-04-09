@@ -1,47 +1,23 @@
 export default async function handler(req, res) {
-  const { from, to } = req.query;
+  const { from, to, persons } = req.query;
 
   const headers = {
     "X-API-KEY": process.env.BENTRAL_API_KEY,
     "Content-Type": "application/json"
   };
 
+  if (!from || !to || !persons) {
+    return res.status(400).json({ error: "Missing required parameters: from, to, or persons" });
+  }
+
   try {
-    const propertiesRes = await fetch(`https://api.bentral.com/v1/properties`, { headers });
-    const properties = await propertiesRes.json();
+    const searchUrl = `https://api.bentral.com/v1/properties/search?from=${from}&to=${to}&persons=${persons}`;
+    const response = await fetch(searchUrl, { headers });
+    const data = await response.json();
 
-    let allAvailableUnits = [];
-
-    for (const property of properties) {
-      const propertyId = property.id;
-
-      const unitsRes = await fetch(`https://api.bentral.com/v1/properties/${propertyId}/units`, { headers });
-      const units = await unitsRes.json();
-
-      for (const unit of units) {
-        const unitId = unit.id;
-
-        const detailsRes = await fetch(
-          `https://api.bentral.com/v1/properties/${propertyId}/units/${unitId}?fields=availability&from=${from}&to=${to}`,
-          { headers }
-        );
-        const details = await detailsRes.json();
-
-        const isAvailable = details.availability?.every(day => day.status === "avail");
-
-        if (isAvailable) {
-          allAvailableUnits.push({
-            unitId,
-            propertyId,
-            name: unit.unofficialName || unit.officialName?.[0]?.title
-          });
-        }
-      }
-    }
-
-    res.status(200).json(allAvailableUnits);
+    res.status(200).json(data);
   } catch (error) {
-    console.error("Fetch failed:", error);
-    res.status(500).json({ error: "Internal error", message: error.message });
+    console.error("Error fetching from Bentral:", error);
+    res.status(500).json({ error: "Bentral API fetch failed", details: error.message });
   }
 }
