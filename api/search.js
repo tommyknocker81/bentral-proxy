@@ -1,6 +1,9 @@
 export default async function handler(req, res) {
   const { from, to, persons } = req.query;
 
+  res.setHeader("Access-Control-Allow-Origin", "https://beatrice-eb443d.webflow.io"); // 👈 ADD THIS
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+
   const headers = {
     "X-API-KEY": process.env.BENTRAL_API_KEY,
     "Content-Type": "application/json"
