@@ -1,51 +1,33 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  const { propertyId } = req.query;
+
+  if (!propertyId) {
+    return res.status(400).json({ error: "Missing propertyId in query." });
   }
 
   try {
-    const buffers = [];
-    for await (const chunk of req) {
-      buffers.push(chunk);
-    }
-    const rawBody = Buffer.concat(buffers).toString();
-    const parsedBody = JSON.parse(rawBody);
-
-    const bentralResponse = await fetch('https://www.bentral.com/api/properties/units', {
-      method: 'POST',
+    const response = await fetch(`https://api.bentral.com/v1/properties/${propertyId}/units?fields=id,official_name`, {
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0' // ← Bentral may require this
-      },
-      body: JSON.stringify({
-        apiKey: parsedBody.apiKey
-      })
+        'Authorization': 'Bearer 21ae35bd32df3d14e889cfb95ab3f3f6'
+      }
     });
 
-    const text = await bentralResponse.text();
+    const data = await response.json();
 
-    if (!bentralResponse.ok) {
-      console.error("❌ Bentral API error:", bentralResponse.status, text);
-      return res.status(500).json({
-        error: 'Bentral responded with error',
-        status: bentralResponse.status,
-        body: text
-      });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: "Failed to fetch from Bentral", raw: data });
     }
 
-    const data = JSON.parse(text);
     return res.status(200).json(data);
-
   } catch (error) {
-    console.error('❌ Proxy fetch failed:', error);
-    return res.status(500).json({ error: 'Proxy failed to fetch from Bentral', details: error.message });
+    return res.status(500).json({ error: "Proxy failed", details: error.message });
   }
 }
