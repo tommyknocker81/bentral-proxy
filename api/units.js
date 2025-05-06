@@ -19,14 +19,15 @@ export default async function handler(req, res) {
     const rawBody = Buffer.concat(buffers).toString();
     const parsedBody = JSON.parse(rawBody);
 
-    const bentralResponse = await fetch('https://www.bentral.com/api/objects/get-units', {
+    const bentralResponse = await fetch('https://www.bentral.com/api/properties/units', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0' // ← Bentral may require this
       },
       body: JSON.stringify({
         apiKey: parsedBody.apiKey
-      }),
+      })
     });
 
     const text = await bentralResponse.text();
