@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // CORS headers
+  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,17 +13,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const apiResponse = await fetch('https://www.bentral.com/api/properties/units', {
+    // 🔥 Manually read the body as a stream
+    const buffers = [];
+    for await (const chunk of req) {
+      buffers.push(chunk);
+    }
+    const rawBody = Buffer.concat(buffers).toString();
+    const parsedBody = JSON.parse(rawBody);
+
+    const response = await fetch('https://www.bentral.com/api/properties/units', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        apiKey: req.body.apiKey, // This must be present
-      }),
+        apiKey: parsedBody.apiKey
+      })
     });
 
-    const data = await apiResponse.json();
+    const data = await response.json();
 
     if (!data.units) {
       console.error("❌ Unexpected Bentral response:", data);
@@ -33,6 +41,6 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   } catch (error) {
     console.error('❌ Proxy fetch failed:', error);
-    return res.status(500).json({ error: 'Fetch to Bentral failed' });
+    return res.status(500).json({ error: 'Proxy failed to fetch from Bentral' });
   }
 }
