@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   const { from, to, persons } = req.query;
 
-  res.setHeader("Access-Control-Allow-Origin", "https://beatrice-eb443d.webflow.io"); // 👈 ADD THIS
+  res.setHeader("Access-Control-Allow-Origin", "https://beatrice-eb443d-28e688c6164b9bfe20ae0ca.webflow.io"); // 👈 ADD THIS
   res.setHeader("Access-Control-Allow-Methods", "GET");
 
   const headers = {
