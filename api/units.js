@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const apiKey = '21ae35bd32df3d14e889cfb95ab3f3f6';
 
   try {
-    const response = await fetch(`https://api.bentral.com/v1/properties/${propertyId}/units?fields=id,label,unofficial_name,capacity_basic,capacity_additional`, {
+    const response = await fetch(`https://api.bentral.com/v1/properties/${propertyId}/units?fields=id,unofficial_name`, {
       headers: { 'x-api-key': apiKey }
     });
 
@@ -21,13 +21,7 @@ export default async function handler(req, res) {
 
     const units = {};
     data.forEach(unit => {
-      const label = unit.label || "";
-      const basic = unit.capacityBasic || 0;
-      const extra = unit.capacityAdditional || 0;
-      const name = unit.unofficialName || "";
-
-      const combined = `Soba ${label} (${basic}+${extra}) - ${name}`;
-      units[unit.id] = combined;
+      units[unit.id] = unit.unofficialName || "";
     });
 
     return res.status(200).json(units);
