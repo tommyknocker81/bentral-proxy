@@ -135,6 +135,19 @@ export default async function handler(req, res) {
           }
         }
 
+        // Apply the same promotion Bentral applied to the flexible price
+        // (e.g. "last_minute" -18%). Percentage promotions only; for any other
+        // type we can't be sure, so we hide the non-refundable price.
+        const disc = unit.discount || {};
+        if (nonref_amount !== null && (disc.percentage || disc.amount)) {
+          const pct = Number(disc.percentage);
+          if (disc.percentage && !isNaN(pct)) {
+            nonref_amount = (Number(nonref_amount) * (1 - pct / 100)).toFixed(2);
+          } else {
+            nonref_amount = null;
+          }
+        }
+
         // Lowest price to show on the listing:
         // non-refundable if it exists and is cheaper, otherwise flexible
         const flexible = Number(unit.amount);
