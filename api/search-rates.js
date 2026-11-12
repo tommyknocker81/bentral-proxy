@@ -135,7 +135,18 @@ export default async function handler(req, res) {
           }
         }
 
-        return { ...unit, nonref_amount };
+        // Lowest price to show on the listing:
+        // non-refundable if it exists and is cheaper, otherwise flexible
+        const flexible = Number(unit.amount);
+        const nonref = nonref_amount !== null ? Number(nonref_amount) : null;
+        const useNonref = nonref !== null && nonref < flexible;
+
+        return {
+          ...unit,
+          nonref_amount,
+          lowest_amount: useNonref ? nonref_amount : unit.amount,
+          lowest_policy: useNonref ? "nonref" : "std"
+        };
       })
     );
 
